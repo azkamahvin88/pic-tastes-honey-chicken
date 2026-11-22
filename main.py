@@ -1,26 +1,32 @@
-"""Honey-glazed fried chicken — one ingredient, one picture.
+"""Copy the honey-glazed fried chicken entry image to the output dir.
 
-Copies the entry image (entry.png, next to this file) to the output path
-the grader reads: $MAKEFUN_OUTPUT_DIR/entry.png, or /output/entry.png.
-Standard library only; no network; identical bytes on every run.
+The program locates ``entry.png`` next to this file and copies it to
+``$MAKEFUN_OUTPUT_DIR/entry.png`` (or ``/output/entry.png`` when the
+variable is not set). Python 3.13, standard library only, no network.
 """
 
 import os
 import shutil
 import sys
+from pathlib import Path
 
 
 def main() -> int:
-    here = os.path.dirname(os.path.abspath(__file__))
-    src = os.path.join(here, "entry.png")
-    if not os.path.isfile(src):
-        print("entry.png not found next to main.py", file=sys.stderr)
+    here = Path(__file__).resolve().parent
+    source = here / "entry.png"
+    if not source.is_file():
+        # Fail loudly: a missing source image means the entry has no
+        # picture at all, so never silently produce an empty output.
+        print(f"error: entry.png not found next to main.py ({here})", file=sys.stderr)
         return 1
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
-    os.makedirs(out_dir, exist_ok=True)
-    dst = os.path.join(out_dir, "entry.png")
-    shutil.copyfile(src, dst)
-    print(f"wrote {dst} ({os.path.getsize(dst)} bytes)")
+
+    output_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    destination = output_dir / "entry.png"
+
+    shutil.copyfile(source, destination)
+    size = destination.stat().st_size
+    print(f"wrote {destination} ({size} bytes)")
     return 0
 
 
